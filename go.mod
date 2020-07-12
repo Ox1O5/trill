@@ -1,7 +1,5 @@
-module trill-web
+module github.com/Ox1O5/thrill
 
-go 1.13
+go 1.14
 
-require trill v0.0.0
-
-replace trill => ./trill
+require github.com/golang/protobuf v1.3.3
