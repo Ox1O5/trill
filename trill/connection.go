@@ -19,16 +19,16 @@ type connection struct {
 	conn         *net.TCPConn
 	connID       uint32
 	isClosed     bool
-	handleAPI    handleFunc
+	router       IRouter
 	exitBuffChan chan bool
 }
 
-func NewConnection(conn *net.TCPConn, connID uint32, callBackAPI handleFunc) *connection {
+func NewConnection(conn *net.TCPConn, connID uint32, router IRouter) *connection {
 	c := &connection{
 		conn:         conn,
 		connID:       connID,
 		isClosed:     false,
-		handleAPI:    callBackAPI,
+		router:       router,
 		exitBuffChan: make(chan bool, 1),
 	}
 	return c
@@ -41,17 +41,23 @@ func (c *connection) startReader() {
 
 	for {
 		buf := make([]byte, 512)
-		cnt, err := c.conn.Read(buf)
+		_, err := c.conn.Read(buf)
 		if err != nil {
 			fmt.Println("read error ", err)
 			c.exitBuffChan <- true
 			continue
 		}
-		if err := c.handleAPI(c.conn, buf, cnt); err != nil {
-			fmt.Println("handle connection ", c.connID, " error ", err)
-			c.exitBuffChan <- true
-			return
+
+		req := &request{
+			conn: c,
+			data: nil,
 		}
+
+		go func(request IRequest) {
+			c.router.PreHandle(request)
+			c.router.Handle(request)
+			c.router.PostHandle(request)
+		}(req)
 	}
 }
 
@@ -86,4 +92,3 @@ func (c *connection) GetConnID() uint32 {
 func (c *connection) RemoteAddr() net.Addr {
 	return c.conn.RemoteAddr()
 }
-

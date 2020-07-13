@@ -11,6 +11,7 @@ type IServer interface {
 	Start()
 	Stop()
 	Server()
+	AddRouter(router IRouter)
 }
 
 type server struct {
@@ -18,6 +19,7 @@ type server struct {
 	ipVersion string
 	ip        string
 	port      int
+	router    IRouter
 }
 
 func NewServer(name string) IServer {
@@ -26,6 +28,7 @@ func NewServer(name string) IServer {
 		ipVersion: "tcp4",
 		ip:        "0.0.0.0",
 		port:      9090,
+		router:    nil,
 	}
 	return s
 }
@@ -61,7 +64,7 @@ func (s *server) Start() {
 				fmt.Println("Accept error ", err)
 				continue
 			}
-			handleConn := NewConnection(conn, cid, callBackToClient)
+			handleConn := NewConnection(conn, cid, s.router)
 			cid++
 			go handleConn.Start()
 		}
@@ -77,5 +80,9 @@ func (s *server) Server() {
 	for {
 		time.Sleep(10 * time.Second)
 	}
+}
 
+func (s *server) AddRouter(router IRouter) {
+	s.router = router
+	fmt.Println("Add router success")
 }

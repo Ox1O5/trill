@@ -32,11 +32,38 @@ func ClientTest() {
 	}
 }
 
-func TestServer(t *testing.T) {
-	s := NewServer("trill 0.1")
+type pingRouter struct {
+	baseRouter
+}
 
+func (p *pingRouter) PreHandle(request IRequest) {
+	fmt.Println("Call Router PreHandle")
+	_, err := request.GetConnection().GetTCPConnection().Write([]byte("before ping..."))
+	if err != nil {
+		fmt.Println("Call back ping error ", err)
+	}
+}
+
+func (p *pingRouter) Handle(request IRequest) {
+	fmt.Println("Call Router Handle")
+	_, err := request.GetConnection().GetTCPConnection().Write([]byte("ping ping ping..."))
+	if err != nil {
+		fmt.Println("Call back ping error ", err)
+	}
+}
+
+func (p *pingRouter) PostHandle(request IRequest) {
+	fmt.Println("Call Router PostHandle")
+	_, err := request.GetConnection().GetTCPConnection().Write([]byte("after ping..."))
+	if err != nil {
+		fmt.Println("Call back ping error ", err)
+	}
+}
+
+func TestServer(t *testing.T) {
+	s := NewServer("[trill 0.3]")
+	s.AddRouter(&pingRouter{})
 	go ClientTest()
 
 	s.Server()
-
 }
