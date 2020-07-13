@@ -9,7 +9,7 @@ import (
 
 func ClientTest() {
 	fmt.Println("Client Test ... start")
-	time.Sleep(3*time.Second)
+	time.Sleep(3 * time.Second)
 	conn, err := net.Dial("tcp", "127.0.0.1:9090")
 	if err != nil {
 		fmt.Println("client start error ", err)
@@ -22,7 +22,7 @@ func ClientTest() {
 			return
 		}
 		buf := make([]byte, 512)
-		cnt ,err := conn.Read(buf)
+		cnt, err := conn.Read(buf)
 		if err != nil {
 			fmt.Println("read from buffer error ", err)
 			return
@@ -32,11 +32,11 @@ func ClientTest() {
 	}
 }
 
-func TestServer(t *testing.T)  {
+func TestServer(t *testing.T) {
 	s := NewServer("trill 0.1")
 
 	go ClientTest()
 
 	s.Server()
-	
+
 }
