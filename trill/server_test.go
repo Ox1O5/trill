@@ -3,10 +3,10 @@ package trill
 import (
 	"fmt"
 	"io"
+	"math/rand"
 	"net"
 	"testing"
 	"time"
-
 )
 
 func ClientTest() {
@@ -19,7 +19,8 @@ func ClientTest() {
 	}
 	for {
 		pkt := NewPacket()
-		msg, err := pkt.Pack(NewMsgPacket(0, []byte("Trill v0.5 Client test message")))
+		msgID := uint32(rand.Intn(2))
+		msg, err := pkt.Pack(NewMsgPacket(msgID, []byte("Trill v0.6 Client test message")))
 		_, err = conn.Write(msg)
 		if err != nil {
 			fmt.Println("write error ", err)
@@ -66,10 +67,10 @@ type pingRouter struct {
 //}
 
 func (p *pingRouter) Handle(request IRequest) {
-	fmt.Println("Call Router Handle")
+	fmt.Println("Call pingRouter Handle")
 	fmt.Println("receive from client : msgID = ", request.GetMsgID(),
 		" data = ", string(request.GetData()))
-	err := request.GetConnection().SendMsg(1, []byte("ping ping ping...\n"))
+	err := request.GetConnection().SendMsg(0, []byte("ping ping ping...\n"))
 	if err != nil {
 		fmt.Println("SendMsg error ", err)
 	}
@@ -83,10 +84,25 @@ func (p *pingRouter) Handle(request IRequest) {
 //	}
 //}
 
-func TestServer(t *testing.T) {
-	s := NewServer("[trill 0.3]")
-	s.AddRouter(&pingRouter{})
-	go ClientTest()
+type helloRouter struct {
+	baseRouter
+}
 
+func (h *helloRouter) Handle(request IRequest) {
+	fmt.Println("Call helloRouter Handle")
+	fmt.Println("receive from client : msgID = ", request.GetMsgID(),
+		" data = ", string(request.GetData()))
+
+	err := request.GetConnection().SendMsg(1, []byte("hello hello hello...\n"))
+	if err != nil {
+		fmt.Println("SendMsg error ", err)
+	}
+}
+
+func TestServer(t *testing.T) {
+	s := NewServer("[trill 0.6]")
+	s.AddRouter(0, &pingRouter{})
+	s.AddRouter(1, &helloRouter{})
+	go ClientTest()
 	s.Server()
 }

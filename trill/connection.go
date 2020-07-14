@@ -22,24 +22,26 @@ type connection struct {
 	conn         *net.TCPConn
 	connID       uint32
 	isClosed     bool
-	router       IRouter
+	msgHandler IMsgHandle
 	exitBuffChan chan bool
+	msgChan chan []byte
 }
 
-func NewConnection(conn *net.TCPConn, connID uint32, router IRouter) *connection {
+func NewConnection(conn *net.TCPConn, connID uint32, msgHandler IMsgHandle) *connection {
 	c := &connection{
 		conn:         conn,
 		connID:       connID,
 		isClosed:     false,
-		router:       router,
+		msgHandler : msgHandler,
 		exitBuffChan: make(chan bool, 1),
+		msgChan: make(chan []byte),
 	}
 	return c
 }
 
 func (c *connection) startReader() {
-	fmt.Println("Reader goroutine is running")
-	defer fmt.Println(c.RemoteAddr().String(), "conn reader exit")
+	fmt.Println("[Reader goroutine is running]")
+	defer fmt.Println(c.RemoteAddr().String(), "[conn reader exit]")
 	defer c.Stop()
 
 	for {
@@ -72,16 +74,29 @@ func (c *connection) startReader() {
 			msg: msg,
 		}
 
-		go func(request IRequest) {
-			c.router.PreHandle(request)
-			c.router.Handle(request)
-			c.router.PostHandle(request)
-		}(req)
+		go c.msgHandler.DoMsgHandle(req)
+	}
+}
+
+func(c *connection)startWriter() {
+	fmt.Println("[Writer goroutine is running]")
+	defer fmt.Println(c.RemoteAddr().String(), "[conn writer exit]")
+
+	for {
+		select {
+		case data := <-c.msgChan:
+			if _, err := c.conn.Write(data); err != nil {
+				fmt.Println("Send data error: ", err, " conn writer exit")
+			}
+		case <-c.exitBuffChan:
+			return
+		}
 	}
 }
 
 func (c *connection) Start() {
 	go c.startReader()
+	go c.startWriter()
 	for {
 		select {
 		case <-c.exitBuffChan:
@@ -122,10 +137,6 @@ func (c *connection) SendMsg(msgID uint32, data []byte) error {
 		fmt.Println("Pack error message ID = ", msgID)
 		return errors.New("Pack error msg\n")
 	}
-	if _, err := c.conn.Write(msg); err != nil {
-		fmt.Println("Write  message ID = ", msgID, " error", err)
-		c.exitBuffChan <-true
-		return errors.New("connection write error")
-	}
+	c.msgChan <- msg
 	return nil
 }
