@@ -5,13 +5,12 @@ import (
 	"io/ioutil"
 )
 
-
 type GlobalObj struct {
 	//TcpServer  trill.IServer
-	Host string
-	TcpPort int
-	Name string
-	Version string
+	Host          string
+	TcpPort       int
+	Name          string
+	Version       string
 	MaxPacketSize uint32
 	MaxConnection uint32
 }
@@ -38,5 +37,5 @@ func init() {
 		MaxConnection: 10000,
 		MaxPacketSize: 4096,
 	}
-		GlobalObject.Load()
+	GlobalObject.Load()
 }
