@@ -1,7 +1,9 @@
 package trill
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net"
 )
 
@@ -11,6 +13,7 @@ type IConnection interface {
 	GetTCPConnection() *net.TCPConn
 	GetConnID() uint32
 	RemoteAddr() net.Addr
+	SendMsg(msgID uint32, data []byte) error
 }
 
 type handleFunc func(*net.TCPConn, []byte, int) error
@@ -40,17 +43,33 @@ func (c *connection) startReader() {
 	defer c.Stop()
 
 	for {
-		buf := make([]byte, 512)
-		_, err := c.conn.Read(buf)
-		if err != nil {
-			fmt.Println("read error ", err)
+		pkt := NewPacket()
+		headData := make([]byte, pkt.GetHeadLen())
+		if _, err := io.ReadFull(c.GetTCPConnection(), headData); err != nil {
+			fmt.Println("read message head error ", err)
 			c.exitBuffChan <- true
 			continue
 		}
+		msg, err := pkt.UnPack(headData)
+		if err != nil {
+			fmt.Println("unpack error ", err)
+			c.exitBuffChan <- true
+			continue
+		}
+		var data []byte
+		if msg.GetDataLen() > 0 {
+			data = make([]byte, msg.GetDataLen())
+			if _, err := io.ReadFull(c.GetTCPConnection(), data); err != nil {
+				fmt.Println("read message data error ", err)
+				c.exitBuffChan <- true
+				continue
+			}
+		}
+		msg.SetData(data)
 
 		req := &request{
 			conn: c,
-			data: nil,
+			msg: msg,
 		}
 
 		go func(request IRequest) {
@@ -91,4 +110,22 @@ func (c *connection) GetConnID() uint32 {
 
 func (c *connection) RemoteAddr() net.Addr {
 	return c.conn.RemoteAddr()
+}
+
+func (c *connection) SendMsg(msgID uint32, data []byte) error {
+	if c.isClosed == true {
+		return errors.New("Connection closed before send message\n")
+	}
+	pkt := NewPacket()
+	msg, err := pkt.Pack(NewMsgPacket(msgID, data))
+	if err != nil {
+		fmt.Println("Pack error message ID = ", msgID)
+		return errors.New("Pack error msg\n")
+	}
+	if _, err := c.conn.Write(msg); err != nil {
+		fmt.Println("Write  message ID = ", msgID, " error", err)
+		c.exitBuffChan <-true
+		return errors.New("connection write error")
+	}
+	return nil
 }
