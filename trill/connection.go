@@ -22,16 +22,16 @@ type connection struct {
 	conn         *net.TCPConn
 	connID       uint32
 	isClosed     bool
-	router       IRouter
+	msgHandler IMsgHandle
 	exitBuffChan chan bool
 }
 
-func NewConnection(conn *net.TCPConn, connID uint32, router IRouter) *connection {
+func NewConnection(conn *net.TCPConn, connID uint32, msgHandler IMsgHandle) *connection {
 	c := &connection{
 		conn:         conn,
 		connID:       connID,
 		isClosed:     false,
-		router:       router,
+		msgHandler : msgHandler,
 		exitBuffChan: make(chan bool, 1),
 	}
 	return c
@@ -72,11 +72,7 @@ func (c *connection) startReader() {
 			msg: msg,
 		}
 
-		go func(request IRequest) {
-			c.router.PreHandle(request)
-			c.router.Handle(request)
-			c.router.PostHandle(request)
-		}(req)
+		go c.msgHandler.DoMsgHandle(req)
 	}
 }
 
