@@ -1,0 +1,6 @@
+{
+  "Name" : "demo",
+  "Host" : "127.0.0.1",
+  "TcpPort": 9090,
+  "MaxConnection" : 3
+}

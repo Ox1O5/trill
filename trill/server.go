@@ -3,6 +3,7 @@ package trill
 import (
 	"errors"
 	"fmt"
+	"github.com/Ox1O5/trill/utils"
 	"net"
 	"time"
 )
@@ -23,11 +24,12 @@ type server struct {
 }
 
 func NewServer(name string) IServer {
+	utils.GlobalObject.Load()
 	s := &server{
-		name:      name,
+		name:      utils.GlobalObject.Name,
 		ipVersion: "tcp4",
-		ip:        "0.0.0.0",
-		port:      9090,
+		ip:        utils.GlobalObject.Host,
+		port:      utils.GlobalObject.TcpPort,
 		router:    nil,
 	}
 	return s
