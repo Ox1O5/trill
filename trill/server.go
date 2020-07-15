@@ -38,6 +38,7 @@ func NewServer(name string) IServer {
 func (s *server) Start() {
 	fmt.Printf("[start] server listenner at ip: %s : %d , is starting\n", s.ip, s.port)
 	go func() {
+		s.msgHandler.StartWorkerPool()
 		addr, err := net.ResolveTCPAddr(s.ipVersion, fmt.Sprintf("%s:%d", s.ip, s.port))
 		if err != nil {
 			fmt.Println("resolve tcp addr err: ", err)

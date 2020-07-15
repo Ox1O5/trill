@@ -3,6 +3,7 @@ package trill
 import (
 	"errors"
 	"fmt"
+	"github.com/Ox1O5/trill/utils"
 	"io"
 	"net"
 )
@@ -73,8 +74,11 @@ func (c *connection) startReader() {
 			conn: c,
 			msg: msg,
 		}
-
-		go c.msgHandler.DoMsgHandle(req)
+		if utils.GlobalObject.WorkerPoolSize > 0 {
+			c.msgHandler.SendMsgToTaskQueue(req)
+		} else {
+			go c.msgHandler.DoMsgHandle(req)
+		}
 	}
 }
 

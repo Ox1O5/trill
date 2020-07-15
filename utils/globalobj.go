@@ -13,6 +13,8 @@ type GlobalObj struct {
 	Version       string
 	MaxPacketSize uint32
 	MaxConnection uint32
+	WorkerPoolSize uint32
+	MaxWorkerTaskLen uint32
 }
 
 var GlobalObject *GlobalObj
@@ -36,6 +38,8 @@ func init() {
 		Host:          "0.0.0.0",
 		MaxConnection: 10000,
 		MaxPacketSize: 4096,
+		WorkerPoolSize: 8,
+		MaxWorkerTaskLen : 1024,
 	}
 	GlobalObject.Load()
 }
