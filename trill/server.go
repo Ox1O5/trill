@@ -38,7 +38,9 @@ func NewServer(name string) IServer {
 		ipVersion:   "tcp4",
 		ip:          utils.GlobalObject.Host,
 		port:        utils.GlobalObject.TcpPort,
+		//消息管理器
 		msgHandler:  NewMsgHandle(),
+		//连接管理器
 		connManager: NewConnManager(),
 	}
 	return s

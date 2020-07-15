@@ -22,7 +22,6 @@ type IConnection interface {
 	RemoveProperty(key string)
 }
 
-type handleFunc func(*net.TCPConn, []byte, int) error
 
 type connection struct {
 	TcpServer    IServer
@@ -63,14 +62,12 @@ func (c *connection) startReader() {
 		headData := make([]byte, pkt.GetHeadLen())
 		if _, err := io.ReadFull(c.GetTCPConnection(), headData); err != nil {
 			fmt.Println("read Message head error ", err)
-			c.exitBuffChan <- true
-			continue
+			break
 		}
 		msg, err := pkt.UnPack(headData)
 		if err != nil {
 			fmt.Println("unpack error ", err)
-			c.exitBuffChan <- true
-			continue
+			break
 		}
 		var data []byte
 		if msg.GetDataLen() > 0 {
@@ -127,15 +124,16 @@ func (c *connection) Start() {
 	go c.startReader()
 	go c.startWriter()
 	c.TcpServer.CallOnConnStart(c)
-	for {
-		select {
-		case <-c.exitBuffChan:
-			return
-		}
-	}
+	//for {
+	//	select {
+	//	case <-c.exitBuffChan:
+	//		return
+	//	}
+	//}
 }
 
 func (c *connection) Stop() {
+	fmt.Println("Conn Stop()...ConnID = ", c.connID)
 	if c.isClosed == true {
 		return
 	}

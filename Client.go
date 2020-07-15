@@ -49,6 +49,7 @@ func main() {
 				msg.ID, " len= ", msg.DataLen, " data= ", string(msg.Data))
 		}
 
-		time.Sleep(time.Second)
+		time.Sleep(2*time.Second)
+
 	}
 }
