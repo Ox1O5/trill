@@ -13,6 +13,10 @@ type IServer interface {
 	Server()
 	AddRouter(msgID uint32, router IRouter)
 	GetConnManager() IConnManager
+	SetOnConnStart(func (IConnection))
+	SetOnConnStop(func (IConnection))
+	CallOnConnStart(conn IConnection)
+	CallOnConnStop(conn IConnection)
 }
 
 type server struct {
@@ -22,21 +26,23 @@ type server struct {
 	port        int
 	msgHandler  IMsgHandle
 	connManager IConnManager
+
+	onConnStart func(conn IConnection)
+	onConnStop func(conn IConnection)
 }
 
 func NewServer(name string) IServer {
 	utils.GlobalObject.Load()
 	s := &server{
-		name:      utils.GlobalObject.Name,
-		ipVersion: "tcp4",
-		ip:        utils.GlobalObject.Host,
-		port:      utils.GlobalObject.TcpPort,
-		msgHandler: NewMsgHandle(),
+		name:        utils.GlobalObject.Name,
+		ipVersion:   "tcp4",
+		ip:          utils.GlobalObject.Host,
+		port:        utils.GlobalObject.TcpPort,
+		msgHandler:  NewMsgHandle(),
 		connManager: NewConnManager(),
 	}
 	return s
 }
-
 
 func (s *server) Start() {
 	fmt.Printf("[start] server listenner at ip: %s : %d , is starting\n", s.ip, s.port)
@@ -62,7 +68,7 @@ func (s *server) Start() {
 				continue
 			}
 
-			if s.connManager.Len() >= int(utils.GlobalObject.MaxConnection) {
+			if s.connManager.Len() > int(utils.GlobalObject.MaxConnection) {
 				conn.Close()
 				continue
 			}
@@ -92,3 +98,26 @@ func (s *server) AddRouter(msgID uint32, router IRouter) {
 func (s *server) GetConnManager() IConnManager {
 	return s.connManager
 }
+
+func (s *server) SetOnConnStart(hook func(IConnection)) {
+	s.onConnStart = hook
+}
+
+func (s *server) SetOnConnStop(hook func(IConnection)) {
+	s.onConnStop = hook
+}
+
+func (s *server) CallOnConnStart(conn IConnection) {
+	if s.onConnStart != nil {
+		fmt.Println("====> CallOnConnStart...")
+		s.onConnStart(conn)
+	}
+}
+
+func (s *server) CallOnConnStop(conn IConnection) {
+	if s.onConnStop != nil {
+		fmt.Println("====> CallOnConnStop...")
+		s.onConnStop(conn)
+	}
+}
+

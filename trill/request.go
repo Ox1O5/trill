@@ -8,7 +8,7 @@ type IRequest interface {
 
 type request struct {
 	conn IConnection
-	msg IMessage
+	msg  IMessage
 }
 
 func (r *request) GetConnection() IConnection {

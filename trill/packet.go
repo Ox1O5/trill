@@ -41,15 +41,15 @@ func (p *packet) Pack(msg IMessage) ([]byte, error) {
 
 func (p *packet) UnPack(binaryData []byte) (IMessage, error) {
 	buf := bytes.NewReader(binaryData)
-	msg := &message{}
-	if err := binary.Read(buf, binary.LittleEndian, &msg.dataLen); err != nil {
+	msg := &Message{}
+	if err := binary.Read(buf, binary.LittleEndian, &msg.DataLen); err != nil {
 		return nil, err
 	}
-	if err := binary.Read(buf, binary.LittleEndian, &msg.id); err != nil {
+	if err := binary.Read(buf, binary.LittleEndian, &msg.ID); err != nil {
 		return nil, err
 	}
-	if utils.GlobalObject.MaxPacketSize < msg.dataLen {
-		return nil, errors.New("Too large msg data received\n")
+	if utils.GlobalObject.MaxPacketSize < msg.DataLen {
+		return nil, errors.New("Too large msg Data received\n")
 	}
 	return msg, nil
 }

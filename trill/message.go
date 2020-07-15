@@ -11,41 +11,42 @@ type IMessage interface {
 	SetMsgID(uint32)
 }
 
-type message struct {
-	data    []byte
-	dataLen uint32
-	id      uint32
+type Message struct {
+	Data    []byte
+	DataLen uint32
+	ID      uint32
+
 }
 
-func NewMsgPacket(id uint32, data []byte) *message {
-	m := &message{
-		id:      id,
-		dataLen: uint32(len(data)),
-		data:    data,
+func NewMsgPacket(id uint32, data []byte) *Message {
+	m := &Message{
+		ID:      id,
+		DataLen: uint32(len(data)),
+		Data:    data,
 	}
 	return m
 }
 
-func (m *message) GetDataLen() uint32 {
-	return m.dataLen
+func (m *Message) GetDataLen() uint32 {
+	return m.DataLen
 }
 
-func (m *message) SetDataLen(dataLen uint32) {
-	m.dataLen = dataLen
+func (m *Message) SetDataLen(dataLen uint32) {
+	m.DataLen = dataLen
 }
 
-func (m *message) GetData() []byte {
-	return m.data
+func (m *Message) GetData() []byte {
+	return m.Data
 }
 
-func (m *message) SetData(data []byte) {
-	m.data = data
+func (m *Message) SetData(data []byte) {
+	m.Data = data
 }
 
-func (m *message) GetMsgID() uint32 {
-	return m.id
+func (m *Message) GetMsgID() uint32 {
+	return m.ID
 }
 
-func (m *message) SetMsgID(msgID uint32) {
-	m.id = msgID
+func (m *Message) SetMsgID(msgID uint32) {
+	m.ID = msgID
 }

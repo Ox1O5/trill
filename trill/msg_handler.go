@@ -8,21 +8,21 @@ import (
 
 type IMsgHandle interface {
 	DoMsgHandle(request IRequest)
-	AddRouter (msgID uint32, router IRouter)
+	AddRouter(msgID uint32, router IRouter)
 	StartWorkerPool()
 	SendMsgToTaskQueue(request IRequest)
 }
 
 type msgHandle struct {
-	APIs map[uint32]IRouter
-	TaskQueue []chan IRequest
+	APIs           map[uint32]IRouter
+	TaskQueue      []chan IRequest
 	WorkerPoolSize uint32
 }
 
 func NewMsgHandle() *msgHandle {
 	return &msgHandle{
-		APIs: make(map[uint32]IRouter),
-		TaskQueue: make([]chan IRequest, utils.GlobalObject.WorkerPoolSize),
+		APIs:           make(map[uint32]IRouter),
+		TaskQueue:      make([]chan IRequest, utils.GlobalObject.WorkerPoolSize),
 		WorkerPoolSize: utils.GlobalObject.WorkerPoolSize,
 	}
 }
@@ -56,7 +56,7 @@ func (m *msgHandle) startOneWorker(workerID int, taskQueue chan IRequest) {
 }
 
 func (m *msgHandle) StartWorkerPool() {
-	for i:= 0; i < int(m.WorkerPoolSize); i++ {
+	for i := 0; i < int(m.WorkerPoolSize); i++ {
 		m.TaskQueue[i] = make(chan IRequest, utils.GlobalObject.MaxWorkerTaskLen)
 		go m.startOneWorker(i, m.TaskQueue[i])
 	}
@@ -65,6 +65,6 @@ func (m *msgHandle) StartWorkerPool() {
 func (m *msgHandle) SendMsgToTaskQueue(request IRequest) {
 	workerID := request.GetConnection().GetConnID() % m.WorkerPoolSize
 	fmt.Println("Add ConnID=", request.GetConnection().GetConnID(), " request msgID = ",
-	request.GetMsgID(), "to workerID = ",workerID)
+		request.GetMsgID(), "to workerID = ", workerID)
 	m.TaskQueue[workerID] <- request
 }

@@ -1,26 +1,27 @@
 package trill
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 )
 
 type IConnManager interface {
-	Add (conn IConnection)
-	Remove (conn IConnection)
-	Get (connID uint32) (IConnection, error)
+	Add(conn IConnection)
+	Remove(conn IConnection)
+	Get(connID uint32) (IConnection, error)
 	Len() int
 	ClearConn()
 }
 
 type connManager struct {
-	connections map[uint32] IConnection
-	connLock sync.RWMutex
+	connections map[uint32]IConnection
+	connLock    sync.RWMutex
 }
 
 func NewConnManager() *connManager {
 	return &connManager{
-		connections: make(map[uint32] IConnection),
+		connections: make(map[uint32]IConnection),
 	}
 }
 
@@ -35,7 +36,7 @@ func (c *connManager) Remove(conn IConnection) {
 	c.connLock.Lock()
 	defer c.connLock.Unlock()
 	delete(c.connections, conn.GetConnID())
-	fmt.Println("connection Remove ConnID=",conn.GetConnID(), " successfully: conn num = ", c.Len())
+	fmt.Println("connection Remove ConnID=", conn.GetConnID(), " successfully: conn num = ", c.Len())
 }
 
 func (c *connManager) Get(connID uint32) (IConnection, error) {
@@ -44,7 +45,7 @@ func (c *connManager) Get(connID uint32) (IConnection, error) {
 	if conn, ok := c.connections[connID]; ok {
 		return conn, nil
 	} else {
-		return nil, error.New("connection not found")
+		return nil, errors.New("connection not found\n")
 	}
 }
 
@@ -62,4 +63,3 @@ func (c *connManager) ClearConn() {
 	}
 	fmt.Println("Clear All Connections successfully: conn num = ", c.Len())
 }
-

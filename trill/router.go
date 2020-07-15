@@ -6,10 +6,10 @@ type IRouter interface {
 	PostHandle(request IRequest)
 }
 
-type baseRouter struct{}
+type BaseRouter struct{}
 
-func (b *baseRouter) PreHandle(request IRequest) {}
+func (b *BaseRouter) PreHandle(request IRequest) {}
 
-func (b *baseRouter) Handle(request IRequest) {}
+func (b *BaseRouter) Handle(request IRequest) {}
 
-func (b *baseRouter) PostHandle(request IRequest) {}
+func (b *BaseRouter) PostHandle(request IRequest) {}

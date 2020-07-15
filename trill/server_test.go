@@ -20,7 +20,7 @@ func ClientTest() {
 	for {
 		pkt := NewPacket()
 		msgID := uint32(rand.Intn(2))
-		msg, err := pkt.Pack(NewMsgPacket(msgID, []byte("Trill v0.6 Client test message")))
+		msg, err := pkt.Pack(NewMsgPacket(msgID, []byte("Trill v0.6 Client test Message")))
 		_, err = conn.Write(msg)
 		if err != nil {
 			fmt.Println("write error ", err)
@@ -33,21 +33,21 @@ func ClientTest() {
 			break
 		}
 
-		msgHead ,err := pkt.UnPack(headData)
+		msgHead, err := pkt.UnPack(headData)
 		if err != nil {
 			fmt.Println("server unpack err:", err)
 			return
 		}
 		if msgHead.GetDataLen() > 0 {
-			msg := msgHead.(*message)
-			msg.data = make([]byte, msg.GetDataLen())
-			_, err := io.ReadFull(conn, msg.data)
+			msg := msgHead.(*Message)
+			msg.Data = make([]byte, msg.GetDataLen())
+			_, err := io.ReadFull(conn, msg.Data)
 			if err != nil {
-				fmt.Println("server unpack data error ", err)
+				fmt.Println("server unpack Data error ", err)
 				return
 			}
-			fmt.Println("==> Receive message : ID = ",
-			msg.id, " len= ", msg.dataLen, " data= ", string(msg.data))
+			fmt.Println("==> Receive Message : ID = ",
+				msg.id, " len= ", msg.DataLen, " Data= ", string(msg.Data))
 		}
 
 		time.Sleep(time.Second)
@@ -55,7 +55,7 @@ func ClientTest() {
 }
 
 type pingRouter struct {
-	baseRouter
+	BaseRouter
 }
 
 //func (p *pingRouter) PreHandle(request IRequest) {
@@ -69,7 +69,7 @@ type pingRouter struct {
 func (p *pingRouter) Handle(request IRequest) {
 	fmt.Println("Call pingRouter Handle")
 	fmt.Println("receive from client : msgID = ", request.GetMsgID(),
-		" data = ", string(request.GetData()))
+		" Data = ", string(request.GetData()))
 	err := request.GetConnection().SendMsg(0, []byte("ping ping ping...\n"))
 	if err != nil {
 		fmt.Println("SendMsg error ", err)
@@ -85,13 +85,13 @@ func (p *pingRouter) Handle(request IRequest) {
 //}
 
 type helloRouter struct {
-	baseRouter
+	BaseRouter
 }
 
 func (h *helloRouter) Handle(request IRequest) {
 	fmt.Println("Call helloRouter Handle")
 	fmt.Println("receive from client : msgID = ", request.GetMsgID(),
-		" data = ", string(request.GetData()))
+		" Data = ", string(request.GetData()))
 
 	err := request.GetConnection().SendMsg(1, []byte("hello hello hello...\n"))
 	if err != nil {
