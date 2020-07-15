@@ -1,4 +1,4 @@
-module github.com/Ox1O5/thrill
+module github.com/Ox1O5/trill
 
 go 1.14
 
