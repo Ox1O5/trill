@@ -1,7 +1,6 @@
 {
-  "name" : "trill v0.4",
-  "host" : "127.0.0.1",
-  "TcpPort" : 9090,
+  "Name" : "demo",
+  "Host" : "127.0.0.1",
+  "TcpPort": 9090,
   "MaxConnection" : 3
 }
-

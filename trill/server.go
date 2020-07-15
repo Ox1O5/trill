@@ -1,8 +1,8 @@
 package trill
 
 import (
-	"errors"
 	"fmt"
+	"github.com/Ox1O5/trill/utils"
 	"net"
 	"time"
 )
@@ -11,7 +11,7 @@ type IServer interface {
 	Start()
 	Stop()
 	Server()
-	AddRouter(router IRouter)
+	AddRouter(msgID uint32, router IRouter)
 }
 
 type server struct {
@@ -19,32 +19,26 @@ type server struct {
 	ipVersion string
 	ip        string
 	port      int
-	router    IRouter
+	msgHandler IMsgHandle
 }
 
 func NewServer(name string) IServer {
+	utils.GlobalObject.Load()
 	s := &server{
-		name:      name,
+		name:      utils.GlobalObject.Name,
 		ipVersion: "tcp4",
-		ip:        "0.0.0.0",
-		port:      9090,
-		router:    nil,
+		ip:        utils.GlobalObject.Host,
+		port:      utils.GlobalObject.TcpPort,
+		msgHandler: NewMsgHandle(),
 	}
 	return s
 }
 
-func callBackToClient(conn *net.TCPConn, data []byte, cnt int) error {
-	fmt.Println("[connection handle] call back to client...")
-	if _, err := conn.Write(data[:cnt]); err != nil {
-		fmt.Println("write back error ", err)
-		return errors.New("CallBackError")
-	}
-	return nil
-}
 
 func (s *server) Start() {
 	fmt.Printf("[start] server listenner at ip: %s : %d , is starting\n", s.ip, s.port)
 	go func() {
+		s.msgHandler.StartWorkerPool()
 		addr, err := net.ResolveTCPAddr(s.ipVersion, fmt.Sprintf("%s:%d", s.ip, s.port))
 		if err != nil {
 			fmt.Println("resolve tcp addr err: ", err)
@@ -64,7 +58,7 @@ func (s *server) Start() {
 				fmt.Println("Accept error ", err)
 				continue
 			}
-			handleConn := NewConnection(conn, cid, s.router)
+			handleConn := NewConnection(conn, cid, s.msgHandler)
 			cid++
 			go handleConn.Start()
 		}
@@ -82,7 +76,6 @@ func (s *server) Server() {
 	}
 }
 
-func (s *server) AddRouter(router IRouter) {
-	s.router = router
-	fmt.Println("Add router success")
+func (s *server) AddRouter(msgID uint32, router IRouter) {
+	s.msgHandler.AddRouter(msgID, router)
 }
