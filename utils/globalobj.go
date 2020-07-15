@@ -15,6 +15,7 @@ type GlobalObj struct {
 	MaxConnection uint32
 	WorkerPoolSize uint32
 	MaxWorkerTaskLen uint32
+	MaxMsgChanLen uint32
 }
 
 var GlobalObject *GlobalObj
@@ -40,6 +41,7 @@ func init() {
 		MaxPacketSize: 4096,
 		WorkerPoolSize: 8,
 		MaxWorkerTaskLen : 1024,
+		MaxMsgChanLen : 16,
 	}
 	GlobalObject.Load()
 }

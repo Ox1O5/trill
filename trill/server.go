@@ -12,14 +12,16 @@ type IServer interface {
 	Stop()
 	Server()
 	AddRouter(msgID uint32, router IRouter)
+	GetConnManager() IConnManager
 }
 
 type server struct {
-	name      string
-	ipVersion string
-	ip        string
-	port      int
-	msgHandler IMsgHandle
+	name        string
+	ipVersion   string
+	ip          string
+	port        int
+	msgHandler  IMsgHandle
+	connManager IConnManager
 }
 
 func NewServer(name string) IServer {
@@ -30,6 +32,7 @@ func NewServer(name string) IServer {
 		ip:        utils.GlobalObject.Host,
 		port:      utils.GlobalObject.TcpPort,
 		msgHandler: NewMsgHandle(),
+		connManager: NewConnManager(),
 	}
 	return s
 }
@@ -58,7 +61,12 @@ func (s *server) Start() {
 				fmt.Println("Accept error ", err)
 				continue
 			}
-			handleConn := NewConnection(conn, cid, s.msgHandler)
+
+			if s.connManager.Len() >= int(utils.GlobalObject.MaxConnection) {
+				conn.Close()
+				continue
+			}
+			handleConn := NewConnection(s, conn, cid, s.msgHandler)
 			cid++
 			go handleConn.Start()
 		}
@@ -67,6 +75,7 @@ func (s *server) Start() {
 
 func (s *server) Stop() {
 	fmt.Println("[stop] server name ", s.name)
+	s.connManager.ClearConn()
 }
 
 func (s *server) Server() {
@@ -78,4 +87,8 @@ func (s *server) Server() {
 
 func (s *server) AddRouter(msgID uint32, router IRouter) {
 	s.msgHandler.AddRouter(msgID, router)
+}
+
+func (s *server) GetConnManager() IConnManager {
+	return s.connManager
 }

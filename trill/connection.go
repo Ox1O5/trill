@@ -20,23 +20,28 @@ type IConnection interface {
 type handleFunc func(*net.TCPConn, []byte, int) error
 
 type connection struct {
+	TcpServer IServer
 	conn         *net.TCPConn
 	connID       uint32
 	isClosed     bool
 	msgHandler IMsgHandle
 	exitBuffChan chan bool
 	msgChan chan []byte
+	msgBuffChan chan []byte
 }
 
-func NewConnection(conn *net.TCPConn, connID uint32, msgHandler IMsgHandle) *connection {
+func NewConnection(server IServer, conn *net.TCPConn, connID uint32, msgHandler IMsgHandle) *connection {
 	c := &connection{
+		TcpServer: server,
 		conn:         conn,
 		connID:       connID,
 		isClosed:     false,
 		msgHandler : msgHandler,
 		exitBuffChan: make(chan bool, 1),
 		msgChan: make(chan []byte),
+		msgBuffChan: make(chan []byte, utils.GlobalObject.MaxMsgChanLen),
 	}
+	c.TcpServer.GetConnManager().Add(c)
 	return c
 }
 
@@ -116,7 +121,9 @@ func (c *connection) Stop() {
 	c.isClosed = true
 	c.conn.Close()
 	c.exitBuffChan <- true
+	c.TcpServer.GetConnManager().Remove(c)
 	close(c.exitBuffChan)
+	close(c.msgBuffChan)
 }
 
 func (c *connection) GetTCPConnection() *net.TCPConn {
